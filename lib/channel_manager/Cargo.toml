@@ -10,5 +10,6 @@ name = "c_channel_manager_lib"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
+anyhow = { version = "1.0", default-features = false }
 tokio = { version = "1.1", features = ["full"] }
 bioenpro4to_channel_manager = { git = "https://github.com/lore-lml/bioenpro4to_channel_manager.git" }
