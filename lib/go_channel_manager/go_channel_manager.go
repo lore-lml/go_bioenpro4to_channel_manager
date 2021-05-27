@@ -7,10 +7,10 @@ package go_channel_manager
 import "C"
 import "unsafe"
 
-func Hello(str string) {
+/*func Hello(str string) {
 	cString := C.CString(str)
 	C.hello_from_rust(cString)
-}
+}*/
 
 type Category int
 
@@ -34,11 +34,13 @@ type ChannelInfo struct {
 }
 
 type KeyNonce struct {
-	keyNonce *C.key_nonce_t
+	key   string
+	nonce string
 }
 
 type RawPacket struct {
-	packet *C.raw_packet_t
+	Public []byte
+	Masked []byte
 }
 
 func NewRootChannel(mainnet bool) *RootChannel {
@@ -102,9 +104,13 @@ func (ch *DailyChannelManager) Drop() {
 func (ch *DailyChannelManager) SendRawPacket(packet *RawPacket, keyNonce *KeyNonce) string {
 	var kn *C.key_nonce_t = nil
 	if keyNonce != nil {
-		kn = keyNonce.keyNonce
+		kn = keyNonce.toCKeyNonce()
+		defer C.drop_key_nonce(kn)
 	}
-	var msgId = C.send_raw_packet(ch.channel, packet.packet, kn)
+
+	pack := packet.toCRawPacket()
+	defer C.drop_raw_packet(pack)
+	var msgId = C.send_raw_packet(ch.channel, pack, kn)
 	defer C.drop_str(msgId)
 	return C.GoString(msgId)
 }
@@ -114,25 +120,27 @@ func NewChannelInfo(channelId, announceId string) ChannelInfo {
 }
 
 func NewEncryptionKeyNonce(key, nonce string) *KeyNonce {
-	return &KeyNonce{
-		keyNonce: C.new_encryption_key_nonce(C.CString(key), C.CString(nonce)),
-	}
+	return &KeyNonce{key: key, nonce: nonce}
 }
 
-func (keyNonce *KeyNonce) Drop() {
-	C.drop_key_nonce(keyNonce.keyNonce)
+func (keyNonce *KeyNonce) toCKeyNonce() *C.key_nonce_t {
+	return C.new_encryption_key_nonce(C.CString(keyNonce.key), C.CString(keyNonce.nonce))
 }
 
 func NewRawPacket(pubData, maskData []byte) *RawPacket {
-	p_len := C.ulong(len(pubData))
-	m_len := C.ulong(len(maskData))
-	c_pub := (*C.uchar)(unsafe.Pointer(&pubData[0]))
-	c_mask := (*C.uchar)(unsafe.Pointer(&maskData[0]))
-
-	var packet = C.new_raw_packet(c_pub, p_len, c_mask, m_len)
-	return &RawPacket{packet: packet}
+	return &RawPacket{Public: pubData, Masked: maskData}
 }
 
-func (packet *RawPacket) Drop() {
-	C.drop_raw_packet(packet.packet)
+func (packet *RawPacket) toCRawPacket() *C.raw_packet_t {
+	cPub, pLen := goByteToCByte(packet.Public)
+	cMask, mLen := goByteToCByte(packet.Masked)
+	return C.new_raw_packet(cPub, pLen, cMask, mLen)
+}
+
+/*func cByteToGoByte(cByte *C.uchar, size C.ulong) []byte{
+	return C.GoBytes(unsafe.Pointer(cByte), size)
+}*/
+
+func goByteToCByte(bytes []byte) (*C.uchar, C.ulong) {
+	return (*C.uchar)(unsafe.Pointer(&bytes[0])), C.ulong(len(bytes))
 }

@@ -42,7 +42,6 @@ func testCreateChannelTree(statePsw string, mainnet bool, keyNonce *KeyNonce) Ch
 	public, _ := json.Marshal(newMessage("XASD", true))
 	private, _ := json.Marshal(newMessage("XASD", false))
 	packet := NewRawPacket(public, private)
-	defer packet.Drop()
 	dailyCh.SendRawPacket(packet, keyNonce)
 
 	//Stampa di tutta la struttura dell'albero per debug
@@ -64,14 +63,12 @@ func testRestoreChannelTree(info ChannelInfo, statePsw string, mainnet bool, key
 	public, _ := json.Marshal(newMessage("XASD", true))
 	private, _ := json.Marshal(newMessage("XASD", false))
 	packet := NewRawPacket(public, private)
-	defer packet.Drop()
 	dailyCh.SendRawPacket(packet, keyNonce)
 	root.PrintChannelTree()
 }
 
 func main() {
 	keyNonce := NewEncryptionKeyNonce("This is a secret key", "This is a secret nonce")
-	defer keyNonce.Drop()
 	statePsw := "psw"
 	mainnet := false
 	info := testCreateChannelTree(statePsw, mainnet, keyNonce)
