@@ -1,5 +1,4 @@
 use bioenpro4to_channel_manager::channels::Category;
-use std::os::raw::c_char;
 
 pub mod utils;
 pub mod channel_manager;
