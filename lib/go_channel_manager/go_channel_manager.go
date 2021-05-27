@@ -79,7 +79,7 @@ func (root *RootChannel) Open(statePsw string) ChannelInfo {
 	cStatePsw := C.CString(statePsw)
 	var info = C.open_root_channel(root.root, cStatePsw)
 	defer C.drop_channel_info(info)
-	return ChannelInfo{ChannelId: C.GoString(info.channel_id), AnnounceId: C.GoString(info.announce_id)}
+	return NewChannelInfo(C.GoString(info.channel_id), C.GoString(info.announce_id))
 }
 
 func (root *RootChannel) GetCreateDailyChannelManager(category Category, actorId, statePsw string,
@@ -91,6 +91,12 @@ func (root *RootChannel) GetCreateDailyChannelManager(category Category, actorId
 	cYear := C.ushort(year)
 	channel := C.get_create_daily_actor_channel(root.root, C.int(category), cActorId, cStatePsw, cDay, cMonth, cYear)
 	return &DailyChannelManager{channel: channel}
+}
+
+func (root *RootChannel) ChannelInfo() ChannelInfo {
+	info := C.root_channel_info(root.root)
+	defer C.drop_channel_info(info)
+	return NewChannelInfo(C.GoString(info.channel_id), C.GoString(info.announce_id))
 }
 
 func (root *RootChannel) PrintChannelTree() {
@@ -113,6 +119,12 @@ func (ch *DailyChannelManager) SendRawPacket(packet *RawPacket, keyNonce *KeyNon
 	var msgId = C.send_raw_packet(ch.channel, pack, kn)
 	defer C.drop_str(msgId)
 	return C.GoString(msgId)
+}
+
+func (ch *DailyChannelManager) ChannelInfo() ChannelInfo {
+	info := C.daily_channel_info(ch.channel)
+	defer C.drop_channel_info(info)
+	return NewChannelInfo(C.GoString(info.channel_id), C.GoString(info.announce_id))
 }
 
 func NewChannelInfo(channelId, announceId string) ChannelInfo {

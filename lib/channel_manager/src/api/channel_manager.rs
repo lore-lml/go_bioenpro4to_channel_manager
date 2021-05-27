@@ -110,6 +110,15 @@ pub unsafe extern "C" fn get_create_daily_actor_channel(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn root_channel_info(channel: *mut RootChannel) -> *const ChannelInfo{
+    let ch = match channel.as_mut(){
+        None => return null_mut(),
+        Some(ch) => ch
+    };
+    ChannelInfo::from_ch_info(ch.channel_info())
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn drop_daily_channel_manager(channel: *mut DailyChannelManager){
     channel.drop_in_place();
 }
@@ -152,4 +161,13 @@ pub unsafe extern "C" fn send_raw_packet(root: *mut DailyChannelManager, packet:
         Ok(res) => CString::new(res).map_or(null(), |h| h.into_raw()),
         Err(_) => null()
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn daily_channel_info(channel: *mut DailyChannelManager) -> *const ChannelInfo{
+    let ch = match channel.as_mut(){
+        None => return null_mut(),
+        Some(ch) => ch
+    };
+    ChannelInfo::from_ch_info(ch.channel_info())
 }

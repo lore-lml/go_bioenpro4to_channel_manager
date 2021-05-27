@@ -27,9 +27,11 @@ extern void drop_root_channel(root_channel_t *);
 extern channel_info_t const *open_root_channel(root_channel_t *, char const *channel_psw);
 extern daily_channel_t *get_create_daily_actor_channel(root_channel_t *, int category, char const *actor_id,
                                                        char const *state_psw, uint16_t day, uint16_t month, uint16_t year);
+extern channel_info_t const *root_channel_info(root_channel_t *);
 extern void drop_daily_channel_manager(daily_channel_t *);
 extern void print_channel_tree(root_channel_t *);
 extern char const *send_raw_packet(daily_channel_t *, raw_packet_t const *, key_nonce_t const *);
+extern channel_info_t const *daily_channel_info(daily_channel_t *);
 extern channel_info_t const *new_channel_info(char const *channel_id, char const *announce_id);
 extern void drop_channel_info(channel_info_t *);
 extern key_nonce_t const *new_encryption_key_nonce(char const *key, char const *nonce);
